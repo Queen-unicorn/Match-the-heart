@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="styles.css" />
+        <title>♡ Match the heart ♡</title>
+    </head>
+    <body>
+    <header id="header">
+        <p id="header-title">Matching game - Match the heart ♡</p>
+    </header>
+    <main id="main">
+        <p id="form-label">Set up game config:</p>
+        <form id="config">
+            <span id="config-form">
+                <span class="form-row">
+                    <label>Width, px</label>
+                    <input type="number" name="width" value="600" class="input"/>
+                </span>
+                <span class="form-row">
+                    <label>Height, px</label>
+                    <input type="number" name="height" value="500" class="input"/>
+                </span>
+                <span class="form-row">
+                    <label>Number of columns (6 max)</label>
+                    <input type="number" name="columns" value="5" min="1" max="6" class="input"/>
+                </span>
+                <span class="form-row">
+                    <label>Number of rows (6 max)</label>
+                    <input type="number" name="rows" value="4" min="1" max="6" class="input"/>
+                </span>
+                <span class="form-row">
+                    <label>Timer, sec</label>
+                    <input type="number" name="seconds" min="0" value="120" class="input"/>
+                </span>
+                </span>
+            <span id="config-right-panel"> 
+            <span class="form-row" id="theme-form">
+                <label>Change theme</label>
+                <select type="select" value="light" name="theme" id="theme-select"  class="input">
+                    <option>Light</option>
+                    <option>Dark</option>
+                </select>
+            </span>
+                <span id="config-right-panel-buttons">
+                    <span>
+                        <button id="start-button" type="submit">Start</button>
+                    </span>
+                    <span>
+                        <button id="stop-button">Stop</button>
+                    </span>
+                </span>
+                <div id="timer-container">
+                    <p id="timerLabel">Timer:</p>
+                    <p id="timer">--</p>
+                </div>
+            </span>
+        </form>
+        <div id="game-container"></div>
+    </main>
+    <footer>
+        © Iryna Kovalenko, 2023
+    </footer>
+    </body>
+    <script type="text/javascript" src="./js/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js"></script>
+</html>
