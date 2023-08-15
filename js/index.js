@@ -1,3 +1,5 @@
+// TODO: it's not possible to win the game if total number of cards is odd
+
 const THEMES = { dark: 'dark', light: 'light' }
 const heartsArray = ['💜','🧡','💚','🤎','💛','🤍','💙','🖤','💔','💌','💟','💓','💗','💖','💕','💘','💞','💝'];
 
@@ -54,14 +56,14 @@ class Timer {
     setSeconds(seconds) {
         if(seconds < 0) {
             alert('Seconds must be > 0');
-            stopTimer();
+            this.stopTimer();
             return;
         }
         this.secondsLimit = seconds;
         this.secondsLeft = seconds;
         timerElement.innerHTML = this.secondsLeft;
     }
-};
+}
 
 class Card {
     constructor(emoji, row, column, htmlElement) {
@@ -71,6 +73,11 @@ class Card {
         this.htmlElement = htmlElement;
     }
 
+    /* TODO:
+         Element.classList.add()
+         Element.classList.remove()
+         Element.classList.toggle()
+    */
     open(){
         this.htmlElement.setAttribute('class', 'card card-opened');
         this.htmlElement.innerHTML = this.emoji;
@@ -126,6 +133,7 @@ class MatchGrid {
         themeSelect.addEventListener('change', (event) => this.updateTheme(event.target.value));
 
         document.addEventListener("visibilitychange", function () {
+            // TODO: this does not work because of wrong context
             if(document.hidden) this.timer.pauseTimer();
         });
 
@@ -135,18 +143,18 @@ class MatchGrid {
         this.addAnimation();
     }
 
-    createCards() {
-        gameContainer.innerHTML='';
-
-        let  emojis = [];
-        for(let i = 0; i < (this.columns*this.rows)/2; i++) {
+    generateEmojiArray() {
+        let emojis = [];
+        for(let i = 0; i <(this.columns*this.rows)/2; i++) {
             emojis.push({ id: i, emoji: heartsArray[i] });
             emojis.push({ id: i, emoji: heartsArray[i] });
         }
-        emojis = this.shuffleArray(emojis);
+        return this.shuffleArray(emojis);
+    }
 
-        console.log(emojis);///////////////////////////////////////////////
-        let cardsLeft = emojis.length;
+    createCards() {
+        gameContainer.innerHTML='';
+        let emojis = this.generateEmojiArray();
 
         for(let i = 0; i < this.columns; i++) {
             for(let j = 0; j < this.rows; j++){
@@ -161,31 +169,36 @@ class MatchGrid {
                 const currentElement =  document.getElementById(i + ' ' + j);
                 let card = new Card(emojis[this.columns*j+i].emoji, j, i, currentElement);
 
-                currentElement.addEventListener('click', async () => {
-                    if(currentElement.classList.contains('card-opened') || !this.isPlaying) return;
-                    card.open();
-
-                    if(this.firstOpenedCard === null) this.firstOpenedCard = card;
-                    else {
-                        if(card.emoji !== this.firstOpenedCard.emoji) {
-                            // Opened different cards
-                            await new Promise(r => setTimeout(r, 500));
-                            this.firstOpenedCard.close();
-                            card.close();
-                        } else {
-                            // Opened same cards
-                            cardsLeft-=2;
-                            if(cardsLeft < 2) {
-                                // win
-                                this.stopGame()
-                                alert("You win!");
-                            }
-                        }
-                        this.firstOpenedCard = null;
-                    }
-                });
+                // TODO: use Event Delegation instead of creating listeners here
+                this.setCardEventListener(currentElement, card, emojis.length);
             }
         }
+    }
+
+    setCardEventListener(currentElement, card, cardsLeft) {
+        currentElement.addEventListener('click', async () => {
+            if(currentElement.classList.contains('card-opened') || !this.isPlaying) return;
+            card.open();
+
+            if(this.firstOpenedCard === null) this.firstOpenedCard = card;
+            else {
+                if(card.emoji !== this.firstOpenedCard.emoji) {
+                    // Opened different cards
+                    await new Promise(r => setTimeout(r, 500));
+                    this.firstOpenedCard.close();
+                    card.close();
+                } else {
+                    // Opened same cards
+                    cardsLeft-=2;
+                    if(cardsLeft < 2) {
+                        // win
+                        this.stopGame()
+                        alert("You win!");
+                    }
+                }
+                this.firstOpenedCard = null;
+            }
+        });
     }
 
     updateStyles() {
@@ -207,39 +220,30 @@ class MatchGrid {
     }
 
     updateTheme(theme) {
-        if (theme.toLowerCase() === THEMES.dark) {
-            startButton.setAttribute('class', 'light');
-            stopButton.setAttribute('class', 'light');
-            main.setAttribute('class', 'dark');
-            header.setAttribute('class', 'light');
-            document.getElementById("form-label").setAttribute('class', 'light-font');
-            document.getElementById("config").setAttribute('class', 'light-font');
-            document.getElementById("timer-container").setAttribute('class', 'light-font');
-            
-            let inputs = document.getElementsByClassName('input');
-            for(let i = 0; i < inputs.length; i++) {
-                inputs[i].style.color = 'rgb(255, 240, 240)';
-            }
-        } else {
-            startButton.setAttribute('class', 'dark');
-            stopButton.setAttribute('class', 'dark');
-            main.setAttribute('class', 'light');
-            header.setAttribute('class', 'dark');
-            document.getElementById("form-label").setAttribute('class', 'dark-font');
-            document.getElementById("config").setAttribute('class', 'dark-font');
-            document.getElementById("timer-container").setAttribute('class', 'dark-font');
+        theme.toLowerCase() === THEMES.dark
+            ? this.setBaseStyles('light', 'dark','light-font', 'rgb(255, 240, 240)')
+            : this.setBaseStyles('dark', 'light', 'dark-font', 'rgb(175, 18, 18)');
+    }
+
+    setBaseStyles(theme, opposite, font, color) {
+        startButton.setAttribute('class', theme);
+            stopButton.setAttribute('class', theme);
+            main.setAttribute('class', opposite);
+            header.setAttribute('class', theme);
+            document.getElementById("form-label").setAttribute('class', font);
+            document.getElementById("config").setAttribute('class', font);
+            document.getElementById("timer-container").setAttribute('class', font);
 
             let inputs = document.getElementsByClassName('input');
             for(let i = 0; i < inputs.length; i++) {
-                inputs[i].style.color = 'rgb(175, 18, 18)';
+                inputs[i].style.color = color;
             }
-        }
     }
 
     shuffleArray(array) {
-        for (var i = array.length - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1));
-            var temp = array[i];
+        for (let i = array.length - 1; i > 0; i--) {
+            let j = Math.floor(Math.random() * (i + 1));
+            let temp = array[i];
             array[i] = array[j];
             array[j] = temp;
         }
