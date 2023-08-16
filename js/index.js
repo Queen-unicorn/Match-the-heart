@@ -43,6 +43,10 @@ class Timer {
         this.interval = window.setInterval(() => this.runTimer(),1000);
     }
 
+    continueTimer() {
+        this.interval = window.setInterval(() => this.runTimer(),1000);
+    }
+
     pauseTimer() {
         window.clearInterval(this.interval);    
     }
@@ -73,11 +77,6 @@ class Card {
         this.htmlElement = htmlElement;
     }
 
-    /* TODO:
-         Element.classList.add()
-         Element.classList.remove()
-         Element.classList.toggle()
-    */
     open(){
         this.htmlElement.setAttribute('class', 'card card-opened');
         this.htmlElement.innerHTML = this.emoji;
@@ -103,6 +102,7 @@ class MatchGrid {
         this.isPlaying = false;
 
         this.timer = new Timer(this.secondsLimit, () => this.stopGame());
+        let matchGame = this;
 
         startButton.addEventListener('click', (event) => {
             this.timer.stopTimer();
@@ -133,8 +133,12 @@ class MatchGrid {
         themeSelect.addEventListener('change', (event) => this.updateTheme(event.target.value));
 
         document.addEventListener("visibilitychange", function () {
-            // TODO: this does not work because of wrong context
-            if(document.hidden) this.timer.pauseTimer();
+            if(document.hidden) {
+                matchGame.timer.pauseTimer();
+                return;
+            }
+            matchGame.timer.continueTimer();
+            matchGame.isPlaying = true;
         });
 
         stopButton.disabled = true;
