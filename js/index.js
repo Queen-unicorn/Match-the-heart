@@ -1,5 +1,3 @@
-// TODO: it's not possible to win the game if total number of cards is odd
-
 const THEMES = { dark: 'dark', light: 'light' }
 const heartsArray = ['💜','🧡','💚','🤎','💛','🤍','💙','🖤','💔','💌','💟','💓','💗','💖','💕','💘','💞','💝'];
 
@@ -100,6 +98,7 @@ class MatchGrid {
         this.cards = [];
         this.firstOpenedCard = null;
         this.isPlaying = false;
+        this.cardsLeft = 0;
 
         this.timer = new Timer(this.secondsLimit, () => this.stopGame());
         let matchGame = this;
@@ -137,8 +136,7 @@ class MatchGrid {
                 matchGame.timer.pauseTimer();
                 return;
             }
-            matchGame.timer.continueTimer();
-            matchGame.isPlaying = true;
+            if(matchGame.isPlaying) matchGame.timer.continueTimer();
         });
 
         stopButton.disabled = true;
@@ -149,7 +147,7 @@ class MatchGrid {
 
     generateEmojiArray() {
         let emojis = [];
-        for(let i = 0; i <(this.columns*this.rows)/2; i++) {
+        for(let i = 0; i <(this.columns*this.rows-(this.columns*this.rows%2))/2; i++) {
             emojis.push({ id: i, emoji: heartsArray[i] });
             emojis.push({ id: i, emoji: heartsArray[i] });
         }
@@ -159,27 +157,29 @@ class MatchGrid {
     createCards() {
         gameContainer.innerHTML='';
         let emojis = this.generateEmojiArray();
+        this.cardsLeft = emojis.length;
 
         for(let i = 0; i < this.columns; i++) {
             for(let j = 0; j < this.rows; j++){
-                const el = `
-                    <div
-                        class="card card-closed"
-                        id="${i} ${j}"
-                        style="grid-column-start: ${i+1}; grid-row-start: ${j+1}; grid-column-end: ${i+1}; grid-row-end: ${j+1};"
-                    ></div>
-                `;
-                gameContainer.insertAdjacentHTML('beforeend', el);
-                const currentElement =  document.getElementById(i + ' ' + j);
-                let card = new Card(emojis[this.columns*j+i].emoji, j, i, currentElement);
+                if(emojis[this.columns*j+i]){
+                    const el = `
+                        <div
+                            class="card card-closed"
+                            id="${i} ${j}"
+                            style="grid-column-start: ${i+1}; grid-row-start: ${j+1}; grid-column-end: ${i+1}; grid-row-end: ${j+1};"
+                        ></div>
+                    `;
+                    gameContainer.insertAdjacentHTML('beforeend', el);
+                    const currentElement =  document.getElementById(i + ' ' + j);
+                    let card = new Card(emojis[this.columns*j+i].emoji, j, i, currentElement);
 
-                // TODO: use Event Delegation instead of creating listeners here
-                this.setCardEventListener(currentElement, card, emojis.length);
+                    this.setCardEventListener(currentElement, card);
+                }
             }
         }
     }
 
-    setCardEventListener(currentElement, card, cardsLeft) {
+    setCardEventListener(currentElement, card) {
         currentElement.addEventListener('click', async () => {
             if(currentElement.classList.contains('card-opened') || !this.isPlaying) return;
             card.open();
@@ -193,8 +193,8 @@ class MatchGrid {
                     card.close();
                 } else {
                     // Opened same cards
-                    cardsLeft-=2;
-                    if(cardsLeft < 2) {
+                    this.cardsLeft-=2;
+                    if(this.cardsLeft < 2) {
                         // win
                         this.stopGame()
                         alert("You win!");
